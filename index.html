@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>HUE</title>
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- RGB Colour Picker CSS -->
+    <link href="https://bgrins.github.io/spectrum/spectrum.css" rel="stylesheet">
+
+    <style media="screen" type="text/css">
+        .form-control:disabled {
+            background-color: #222222;
+            border: 1px solid #111111;
+        }
+
+        .sp-replacer {
+            margin: 1px;
+            padding: 7px;
+        }
+    </style>
+
+</head>
+<body style="background-color: #222222; padding-top: 60px;" class="text-secondary">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <div class="col-7">
+            <ul class="navbar-nav">
+                <a class="navbar-brand" href="#">HUE</a>
+            </ul>
+        </div>
+        <div class="col-5">
+            <div class="row">
+                <div class="col-3 form-inline">
+                    <label class="text-white col-5">Hub IP</label>
+                    <input class="form-control col-7" type="text" id="hubIPinput">
+                </div>
+                <div class="col-7 form-inline">
+                    <label class="text-white col-2">User ID</label>
+                    <input class="form-control col-10" type="text" id="userIDinput">
+                </div>
+                <div class="col-2 form-inline">
+                    <button type="button" class="btn btn-success btn-block" onclick="genCookie();">Update Cookie</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container-fluid p-3">
+
+        <div class="row" style="margin: 0px;">
+
+            <div id="templategroups" style="width: 100%;">
+
+            </div>
+
+        </div>
+    </div><!-- /.container -->
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="http://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://bgrins.github.io/spectrum/spectrum.js"></script>
+
+    <script>
+
+        function setCookie(name, value, days) {
+            var expires = "";
+            if (days) {
+                var date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }
+
+        function getCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function eraseCookie(name) {
+            document.cookie = name + '=; Max-Age=-99999999;';
+        }
+
+        function genCookie() {
+            var hubIP = document.getElementById('hubIPinput').value;
+            var userID = document.getElementById('userIDinput').value;
+
+            setCookie('hue_hub_ip', hubIP, 365);
+            setCookie('hue_user_id', userID, 365);
+
+            window.location.reload();
+        }
+
+		var hueGroups = [];
+		var hueLights = [];
+        var hueScenes = [];
+
+        var hubIP = getCookie('hue_hub_ip');
+        var userID = getCookie('hue_user_id');
+
+        $("#hubIPinput").val(hubIP);
+        $("#userIDinput").val(userID);
+
+		var lightstripSvg = '\
+		<svg version="1.2" baseProfile="tiny" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"\
+			 x="0px" y="0px" viewBox="-8 0 40 40" xml:space="preserve">\
+		<path fill="#FFFFFF" d="M16.6,0H0v5h16.9c0,0,6.1-0.4,7.1,4.7V5.1C24,5.1,24.2,0,16.6,0 M3,3H2V2h1V3z M8,3H7V2h1V3z M13,3h-1V2h1V3\
+			z M18,3h-1V2h1V3z M22,4.7L21.3,4L22,3.3L22.7,4L22,4.7z"/>\
+		<path fill="#FFFFFF" d="M7.2,19c0,0-6.2,0.4-7.2-4.7v4.6c0,0-0.1,5.1,7.4,5.1H24v-5H7.2z M2,20.7L1.3,20L2,19.3L2.7,20L2,20.7z\
+			 M7,22H6v-1h1V22z M12,22h-1v-1h1V22z M17,22h-1v-1h1V22z M22,22h-1v-1h1V22z"/>\
+		<path fill="#EEEEEE" d="M5.4,15.4c-1.2,0.4-2,0.7-2.4,1.3c0,0-0.1,0.2-0.1,0.4c0,0,0,0,0,0c-0.2-0.1-0.3-0.2-0.5-0.4\
+			c-0.8-0.8-1.4-1.8-1.4-3c0-0.2,0-0.5,0.1-0.8c0.1-0.5,0.3-1,0.5-1.4c0,0,0,0,0,0c2.2-1.8,6.2-1.8,6.2-1.8L13,9.3\
+			c2.1-0.2,4.3-0.4,5.6-0.7C20,8.3,20.7,7.7,21,7l0,0c0,0,0,0,0,0c0,0,0,0,0,0c0,0,0.1,0.1,0.3,0.3c1,0.8,1.7,2,1.7,3.4\
+			c0,0.1,0,0.3,0,0.4c0,0.4-0.1,0.8-0.3,1.2c0,0,0,0,0,0l0,0c-2.2,2-6.5,2-6.5,2S6.2,15.1,5.4,15.4"/>\
+		</svg>'
+
+		var goSvg = '\
+		<svg version="1.2" baseProfile="tiny" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"\
+			 x="0px" y="0px" viewBox="-8 0 40 40" xml:space="preserve">\
+		<path fill="#EEEEEE" d="M4.5,22.8c0.6,0.4,1.5,0.4,2.2-0.1c-1-0.6-2-1.4-2.8-2.2C3.7,21.4,3.9,22.3,4.5,22.8"/>\
+		<path fill="#FFFFFF" d="M17.9,7.5c4.4,5.4,6.5,10.9,4.8,12.3c-1.7,1.4-6.7-1.8-11-7.2C7.3,7.2,5.1,1.7,6.9,0.3\
+			C8.6-1.1,13.5,2.1,17.9,7.5"/>\
+		<path fill="#EEEEEE" d="M10,13.9c-2.2-2.8-4-5.7-5-8.2C4.2,3.7,4,2.1,4.2,1C1.6,3.9-1.6,9.5,3.1,17.8c2,3.3,6.6,6.1,11.6,6.2\
+			c2.5,0,4.8-0.7,6.7-1.8C17.9,22.1,13.2,17.9,10,13.9"/>\
+		</svg>'
+
+		var bloomSvg = '\
+		<svg version="1.2" baseProfile="tiny" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"\
+			 x="0px" y="0px" viewBox="-8 0 40 40" xml:space="preserve">\
+		<path fill="#EEEEEE" d="M5.8,18.2L5.8,18.2L5.8,18.2c-0.7-0.7-1.3-1.4-1.8-2l-3.8,4.1c0,0-0.5,0.5,0.1,0.7c0.6,0.2,2.5,0.9,7.3,0.6\
+			c0.7,0,1.8-0.1,2.3-0.4C8.1,20.2,6.7,19,6,18.4L5.8,18.2z"/>\
+		<path fill="#EEEEEE" d="M1.9,5c-0.7,2.9-0.6,7.5,4.6,12.6c1.2,1.1,5,4.6,10.1,5.1c1.8,0.2,2.8,0,4.3-0.6c0,0,0,0,0,0\
+			c-3.3-0.4-8.1-3-11.8-6.6C5.2,11.9,2.6,8,1.9,5"/>\
+		<path fill="#FFFFFF" d="M17,8.1C11.6,2.9,5.3-0.1,3.4,1.8c-2.1,2,0.8,7.8,6.3,13.1c5.5,5.2,11.9,7.4,13.7,5.8\
+			C25.3,18.9,22.5,13.3,17,8.1 M20.3,17.6c-1.3,1.1-5.4-0.5-9.1-4c-3.7-3.6-5.9-7.4-4.5-8.9C7.9,3.5,12.2,5.5,16,9\
+			S21.6,16.5,20.3,17.6"/>\
+		</svg>'
+
+		var e27Svg = '\
+		<svg version="1.2" baseProfile="tiny" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"\
+			 x="0px" y="0px" viewBox="-8 0 40 40" xml:space="preserve">\
+		<g>\
+			<path fill="#EEEEEE" d="M15.016,17.984c0,0,0.953-6.403,1.934-9.972c-1.686,0.442-3.859,0.517-5.109,0.517c-1.875,0-3.637-0.157-4.778-0.409\
+				C8.03,11.684,8.984,18,8.984,18S9.121,19,10,19h4C14,19,14.74,18.944,15.016,17.984z"/>\
+			<path fill="#FFFFFF" d="M5.817,1.326C4.242,2.329,5.935,5.324,6.674,6.892C6.69,6.928,6.706,6.962,6.721,6.995\
+				c1.775,0.625,7.973,0.848,10.629-0.154c0.009-0.018,0.018-0.037,0.027-0.056c0.761-1.594,2.347-4.479,0.806-5.46\
+				C16.487,0.246,13.76,0.001,12.013,0h-0.027C10.241,0.001,7.512,0.246,5.817,1.326z"/>\
+			<path fill="#EEEEEE" d="M13.011,23C14.031,23,14,22,14,22v-2h-4v2c0,0-0.042,1,0.979,1c0,0,0.002,1.004,1.001,1.004h0.034\
+				C13.013,24.004,13.011,23,13.011,23z"/>\
+		</g>\
+		</svg>'
+
+		function getScenes() {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/scenes/';
+
+            $.ajax({
+				async: false,
+                type: "GET",
+                url: url,
+                success: function (scenes) {
+					hueScenes = scenes;
+                },
+                cache: true
+            });
+		}
+
+		function getGroups() {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/groups/';
+
+            $.ajax({
+				async: false,
+                type: "GET",
+                url: url,
+                success: function (groups) {
+					hueGroups = groups;
+                },
+                cache: true
+            });
+		}
+
+		function groupLightsOn(groupID) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/groups/' + groupID + '/action/';
+			var data = JSON.stringify({ "on": true });
+
+            $.ajax({
+				async: false,
+                type: "PUT",
+				data: data,
+                url: url,
+                success: function (groupresponse) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function groupLightsOff(groupID) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/groups/' + groupID + '/action/';
+			var data = JSON.stringify({ "on": false });
+
+            $.ajax({
+				async: false,
+                type: "PUT",
+				data: data,
+                url: url,
+                success: function (groupresponse) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function groupLightsBri(groupID) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/groups/' + groupID + '/action/';
+			var newBriInput = 'inputGroupBri' + groupID;
+			var lightBri = Number(document.getElementById(newBriInput).value);
+			var data = JSON.stringify({ "bri": lightBri });
+
+            $.ajax({
+				async: false,
+                type: "PUT",
+				data: data,
+                url: url,
+                success: function (groupresponse) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function groupLightsXy(groupID) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/groups/' + groupID + '/action/';
+			var newXyInput = 'inputGroupXy' + groupID;
+			var lightXy = document.getElementById(newXyInput).value;
+			var Xyarray = lightXy.split(',')
+
+			var data = JSON.stringify({ "xy": [eval(Xyarray[0]),eval(Xyarray[1])] });
+
+            $.ajax({
+				async: false,
+                type: "PUT",
+				data: data,
+                url: url,
+                success: function (groupresponse) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function groupLightsCt(groupID) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/groups/' + groupID + '/action/';
+			var newCtInput = 'inputGroupCt' + groupID;
+			var lightCt = Number(document.getElementById(newCtInput).value);
+			var data = JSON.stringify({ "ct": lightCt });
+
+            $.ajax({
+				async: false,
+                type: "PUT",
+				data: data,
+                url: url,
+                success: function (groupresponse) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function groupLightsHs(groupID) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/groups/' + groupID + '/action/';
+			var newHueInput = 'inputGroupHue' + groupID
+			var newSatInput = 'inputGroupSat' + groupID
+			var lightHue = Number(document.getElementById(newHueInput).value);
+			var lightSat = Number(document.getElementById(newSatInput).value);
+			var data = JSON.stringify({ "hue": lightHue, "sat": lightSat });
+
+            $.ajax({
+				async: false,
+                type: "PUT",
+				data: data,
+                url: url,
+                success: function (groupresponse) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function getLights() {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/lights/';
+
+            $.ajax({
+				async: false,
+                type: "GET",
+                url: url,
+                success: function (lights) {
+					hueLights = lights;
+                },
+                cache: true
+            });
+		}
+
+		function pokeLight(lightId) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/lights/' + lightId + '/state/';
+			var data = JSON.stringify({ "alert": "select" });
+
+            $.ajax({
+                type: "PUT",
+                url: url,
+				data: data,
+                success: function (point) {
+                },
+                cache: true
+            });
+		}
+
+		function enableLight(lightId) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/lights/' + lightId + '/state/';
+			var data = JSON.stringify({ "on": true });
+
+            $.ajax({
+                type: "PUT",
+                url: url,
+				data: data,
+                success: function (point) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function disableLight(lightId) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/lights/' + lightId + '/state/';
+			var data = JSON.stringify({ "on": false });
+
+            $.ajax({
+                type: "PUT",
+                url: url,
+				data: data,
+                success: function (point) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function renameLight(lightId) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/lights/' + lightId;
+			var newNameInput = 'inputLightName' + lightId
+			var lightName = document.getElementById(newNameInput).value;
+			var data = JSON.stringify({ "name": lightName });
+
+            $.ajax({
+                type: "PUT",
+                url: url,
+				data: data,
+                success: function (point) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function briLight(lightId) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/lights/' + lightId + '/state';
+			var newBriInput = 'inputLightBri' + lightId
+			var lightBri = Number(document.getElementById(newBriInput).value);
+			var data = JSON.stringify({ "bri": lightBri });
+
+            $.ajax({
+                type: "PUT",
+                url: url,
+				data: data,
+                success: function (point) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function xyLight(lightId) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/lights/' + lightId + '/state';
+			var newXyInput = 'inputLightXy' + lightId
+			var lightXy = document.getElementById(newXyInput).value;
+			var Xyarray = lightXy.split(',')
+
+			var data = JSON.stringify({ "xy": [eval(Xyarray[0]),eval(Xyarray[1])] });
+
+            $.ajax({
+                type: "PUT",
+                url: url,
+				data: data,
+                success: function (point) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function ctLight(lightId) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/lights/' + lightId + '/state';
+			var newCtInput = 'inputLightCt' + lightId
+			var lightCt = Number(document.getElementById(newCtInput).value);
+			var data = JSON.stringify({ "ct": lightCt });
+
+            $.ajax({
+                type: "PUT",
+                url: url,
+				data: data,
+                success: function (point) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		function hsLight(lightId) {
+		    var url = 'http://' + hubIP + '/api/' + userID + '/lights/' + lightId + '/state';
+			var newHueInput = 'inputLightHue' + lightId
+			var newSatInput = 'inputLightSat' + lightId
+			var lightHue = Number(document.getElementById(newHueInput).value);
+			var lightSat = Number(document.getElementById(newSatInput).value);
+			var data = JSON.stringify({ "hue": lightHue, "sat": lightSat });
+
+            $.ajax({
+                type: "PUT",
+                url: url,
+				data: data,
+                success: function (point) {
+					window.location.reload()
+                },
+                cache: true
+            });
+		}
+
+		getGroups();
+		getLights();
+		getScenes();
+
+		$.each(hueGroups, function(i, item) {
+			var groupLightAllOn = '<span class="material-icons p-0 m-0 align-bottom" style="font-size: 30px;">remove_circle</span>';
+			var groupLightAnyon = '<span class="material-icons p-0 m-0 align-bottom" style="font-size: 30px;">remove_circle</span>';
+			if (item.state.all_on == true) {groupLightAllOn = '<span class="material-icons p-0 m-0 align-bottom text-success" style="font-size: 30px;">check_circle</span>'};
+			if (item.state.any_on == true) {groupLightAnyon = '<span class="material-icons p-0 m-0 align-bottom text-success" style="font-size: 30px;">check_circle</span>'};
+			var hueGroupHtml = '\
+			<div class="card bg-light mb-3">\
+				<div class="card-header">\
+					<div class="pr-3 pl-2 d-inline-block">\
+						<h3 class="p-0 m-0 display-4" style="font-size: 2.75rem;">' + item.name + '</h3>\
+					</div>\
+					<div class="pr-3 pl-2 d-inline-block">\
+						<h3 class="p-0 m-0">' + i + '</h3>\
+						<p class="p-0 text-secondary" style="font-size: 1rem">ID</p>\
+					</div>\
+					<div class="pr-3 pl-2 d-inline-block">\
+						<h3 class="p-0 m-0">' + item.type + '</h3>\
+						<p class="p-0 text-secondary" style="font-size: 1rem">Type</p>\
+					</div>\
+					<div class="pr-3 pl-2 d-inline-block">\
+						<h3 class="p-0 m-0">' + item.class + '</h3>\
+						<p class="p-0 text-secondary" style="font-size: 1rem">Class</p>\
+					</div>\
+					<div class="pr-3 pl-2 d-inline-block">\
+						<h3 class="p-0 m-0">' + groupLightAllOn + '</h3>\
+						<p class="p-0 text-secondary" style="font-size: 1rem">All On</p>\
+					</div>\
+					<div class="pr-3 pl-2 d-inline-block">\
+						<h3 class="p-0 m-0">' + groupLightAnyon + '</h3>\
+						<p class="p-0 text-secondary" style="font-size: 1rem">Any On</p>\
+					</div>\
+				</div>\
+				<div class="card-body p-3">\
+					<div class="row mb-3 px-2">\
+						<div class="pr-3 pl-3 d-inline-block">\
+							  <div class="form-inline">\
+							All On <button type="button" class="btn btn-success mx-2" onclick="groupLightsOn(' + i + ');"><span class="material-icons mt-1">add_circle_outline</span></button>\
+							All Off <button type="button" class="btn btn-danger mx-2" onclick="groupLightsOff(' + i + ');"><span class="material-icons mt-1">remove_circle_outline</span></button>\
+								<div class="form-group">\
+								  <label>Brightn ess</label>\
+								   <input type="text" class="form-control ml-2" id="inputGroupBri' + i + '" form-rounded" value="' + item.action.bri + '">\
+								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2" onclick="groupLightsBri(' + i + ');"><span class="material-icons mt-1">done</span></button>\
+								</div>\
+								<div class="form-group">\
+								  <label>Xy</label>\
+								   <input type="text" class="form-control ml-2" id="inputGroupXy' + i + '" form-rounded" value="' + item.action.xy + '">\
+								   <input type="text" class="preferredRgb form-control" id="preferredRgb' + i + '" />\
+								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2" onclick="groupLightsXy(' + i + ');"><span class="material-icons mt-1">done</span></button>\
+								</div>\
+								<div class="form-group">\
+								  <label>Ct</label>\
+								   <input type="text" class="form-control ml-2" id="inputGroupCt' + i + '" form-rounded" value="' + item.action.ct + '">\
+								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2" onclick="groupLightsCt(' + i + ');"><span class="material-icons mt-1">done</span></button>\
+								</div>\
+								<div class="form-group">\
+								  <label>Hs</label>\
+								   <input type="text" class="form-control ml-2" id="inputGroupHue' + i + '" form-rounded" value="' + item.action.hue + '">\
+								   <input type="text" class="form-control ml-2" id="inputGroupSat' + i + '" form-rounded" value="' + item.action.sat + '">\
+								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2" onclick="groupLightsHs(' + i + ');"><span class="material-icons mt-1">done</span></button>\
+								</div>\
+							  </div>\
+						</div>\
+					</div>\
+				<div class="card-columns" style="column-count: 2;">'
+
+			$.each(item.lights, function (i, item) {
+
+				var currentLight = hueLights[item];
+				var style;
+				var State = '<span class="material-icons p-0 m-0 align-bottom" style="font-size: 30px;">remove_circle</span>';
+				var Reachable = '<span class="material-icons p-0 m-0 align-bottom" style="font-size: 30px;">check_circle</span>';
+				var bulbIcon;
+				var bulbName;
+				var currentLightHex = '#444444';
+
+				if (currentLight.state.reachable == false) {style += ' text-danger'};
+				if (currentLight.state.reachable == false) {Reachable = '<span class="material-icons p-0 m-0 align-bottom" style="font-size: 30px;">remove_circle</span>'};
+				if (currentLight.state.on == true) {style = style += ' text-warning'};
+				if (currentLight.state.on == true) {State = '<span class="material-icons p-0 m-0 align-bottom" style="font-size: 30px;">check_circle</span>'};
+
+				var XyDisabled = currentLight.state.xy;
+				if (XyDisabled === undefined) {XyDisabled = ' disabled'}
+				var CtDisabled = currentLight.state.ct;
+				if (CtDisabled === undefined) {CtDisabled = ' disabled'}
+				var HsDisabled = currentLight.state.hue;
+				if (HsDisabled === undefined) {HsDisabled = ' disabled'}
+
+				var XyStyle = 'card bg-dark';
+				if (currentLight.state.colormode == 'xy') {XyStyle += ' border-warning'};
+				var CtStyle = 'card bg-dark';
+				if (currentLight.state.colormode == 'ct') {CtStyle += ' border-warning'};
+				var HsStyle = 'card bg-dark';
+				if (currentLight.state.colormode == 'hs') {HsStyle += ' border-warning'};
+
+				if (currentLight.state.xy && currentLight.state.on == true) {
+					var lightXy = currentLight.state.xy;
+					var TestCieToRgb = cie_to_rgb(lightXy[0], lightXy[1]);
+					currentLightHex = rgbToHex(TestCieToRgb[0], TestCieToRgb[1], TestCieToRgb[2]);
+				};
+
+				if (currentLight.modelid.match('LCT001|LCT007|LCT010|LCT014')) 	{bulbName = 'Hue Colour'; 		    bulbIcon = e27Svg.replace(/#FFFFFF/g,currentLightHex)};
+                if (currentLight.modelid.match('LTW010|LTW001|LTW004|LTW015'))  { bulbName = 'Hue Ambience';        bulbIcon = e27Svg.replace(/#FFFFFF/g,currentLightHex)};
+                if (currentLight.modelid.match('LWB004|LWB006'))                { bulbName = 'Hue White';           bulbIcon = e27Svg.replace(/#FFFFFF/g,currentLightHex)};
+                if (currentLight.modelid.match('LLC005|LLC011|LLC012|LLC007'))  { bulbName = 'Hue Bloom';           bulbIcon = bloomSvg.replace(/#FFFFFF/g,currentLightHex)};
+                if (currentLight.modelid.match('LST001|LST002'))                { bulbName = 'Hue Lightstrip';      bulbIcon = lightstripSvg.replace(/#FFFFFF/g,currentLightHex)};
+                if (currentLight.modelid.match('LLC020'))                       { bulbName = 'Hue Go';              bulbIcon = goSvg.replace(/#FFFFFF/g,currentLightHex)};
+
+				hueGroupHtml += '\
+				<div class="card bg-dark text-secondary">\
+					<div class="card-header h5' + style + '" style="background-color:#222222;">\
+						<div class="row">\
+							<div class="col-8">\
+								<div class="pr-3 pl-2 d-inline-block">\
+									<h3 class="p-0 m-0">' + item + '</h3>\
+									<p class="p-0 text-secondary" style="font-size: 1rem">ID</p>\
+								</div>\
+								<div class="pr-3 pl-2 d-inline-block border-left border-secondary">\
+								  <h3 class="p-0 m-0">' + currentLight.name + '</h3>\
+								  <p class="p-0 text-secondary" style="font-size: 1rem">Name</p>\
+								</div>\
+								<div class="pr-3 pl-2 d-inline-block border-left border-secondary">\
+									<h3 class="p-0 m-0">' + (Math.round((currentLight.state.bri / 254) * 100)) + '%</h3>\
+									<p class="p-0 text-secondary" style="font-size: 1rem">Brightness</p>\
+								</div>\
+								<div class="pr-3 pl-2 d-inline-block border-left border-secondary">\
+									<h3 class="p-0 m-0">' + currentLight.state.colormode + '</h3>\
+									<p class="p-0 text-secondary" style="font-size: 1rem">Color Mode</p>\
+								</div>\
+								<div class="pr-3 pl-2 d-inline-block border-left border-secondary">\
+									<h3 class="p-0 m-0">' + State + '</h3>\
+									<p class="p-0 text-secondary" style="font-size: 1rem">State</p>\
+								</div>\
+								<div class="pr-3 pl-2 d-inline-block border-left border-secondary">\
+									<h3 class="p-0 m-0">' + Reachable + '</h3>\
+									<p class="p-0 text-secondary" style="font-size: 1rem">Reachable</p>\
+								</div>\
+							</div>\
+							<div class="col-4">\
+								<div class="text-right py-2">\
+									<button type="button" class="btn btn-secondary" onclick="pokeLight(' + item + ');"><span class="material-icons mt-1">search</span></button>\
+									<button type="button" class="btn btn-success" onclick="enableLight(' + item + ');"><span class="material-icons mt-1">add_circle_outline</span></button>\
+									<button type="button" class="btn btn-danger" onclick="disableLight(' + item + ');"><span class="material-icons mt-1">remove_circle_outline</span></button>\
+								</div>\
+							</div>\
+						</div>\
+					</div>\
+					<div class="card-body">\
+						<div class="row">\
+							<div class="col-3">\
+								<div class="card text-center" style="border: 0px;">\
+								  <div class="card-img-top p-3" style="height: 180px; width: 100%; background-color:#222222;">' + bulbIcon + '</div>\
+								  <div class="card-body">\
+									<h4 class="card-title">' + bulbName + ' </h4>\
+									<div>Model: ' + currentLight.modelid + '</div>\
+									<div>SoftVer: ' + currentLight.swversion + '</div>\
+								  </div>\
+								</div>\
+							</div>\
+							<div class="col-9">\
+								<div class="row">\
+									<div class="col-6">\
+										<div class="row">\
+											<div class="card bg-dark">\
+												<div class="card-body p-3">\
+													Name\
+													<div class="row">\
+														<div class="col-10 pr-0">\
+															<input type="text" class="form-control" id="inputLightName' + item + '" form-rounded" value="' + currentLight.name + '">\
+														</div>\
+														<div class="col-2">\
+															<button type="button" class="btn btn-sm btn-success px-1 py-0" onclick="renameLight(' + item + ');"><span class="material-icons mt-1">done</span></button>\
+														</div>\
+													</div>\
+												</div>\
+											</div>\
+										</div>\
+										<div class="row mt-2">\
+											<div class="card bg-dark">\
+												<div class="card-body p-3">\
+													Brightness <span class="text-white">(1 - 254)</span>\
+													<div class="row">\
+														<div class="col-10 pr-0">\
+															<input type="text" class="form-control" id="inputLightBri' + item + '" form-rounded" value="' + currentLight.state.bri + '">\
+														</div>\
+														<div class="col-2">\
+															<button type="button" class="btn btn-sm btn-success px-1 py-0" onclick="briLight(' + item + ');"><span class="material-icons mt-1">done</span></button>\
+														</div>\
+													</div>\
+												</div>\
+											</div>\
+										</div>\
+									</div>\
+									<div class="col-6">\
+										<div class="row mr-1">\
+											<div class="' + XyStyle + '">\
+												<div class="card-body p-3">\
+													Xy <span class="text-white">(0 - 0.9,0 - 0.9)</span>\
+													<div class="row">\
+														<div class="col-10 pr-0">\
+															<input type="text" class="form-control" id="inputLightXy' + item + '" form-rounded" value="' + currentLight.state.xy + '" ' + XyDisabled + '>\
+														</div>\
+														<div class="col-2">\
+															<button type="button" class="btn btn-sm btn-success px-1 py-0" onclick="xyLight(' + item + ');"><span class="material-icons mt-1">done</span></button>\
+														</div>\
+													</div>\
+												</div>\
+											</div>\
+										</div>\
+										<div class="row mt-2 mr-1">\
+											<div class="' + CtStyle + '">\
+												<div class="card-body p-3">\
+													Ct <span class="text-white">(153 (cold) - 500 (warm))\
+													<div class="row">\
+														<div class="col-10 pr-0">\
+															<input type="text" class="form-control" id="inputLightCt' + item + '" form-rounded" value="' + currentLight.state.ct + '" ' + CtDisabled + '>\
+														</div>\
+														<div class="col-2">\
+															<button type="button" class="btn btn-sm btn-success px-1 py-0" onclick="ctLight(' + item + ');"><span class="material-icons mt-1">done</span></button>\
+														</div>\
+													</div>\
+												</div>\
+											</div>\
+										</div>\
+										<div class="row mt-2 mr-1">\
+											<div class="' + HsStyle + '">\
+												<div class="card-body p-3">\
+													<div class="row">\
+														<div class="col-5 pr-0">\
+															Hue <span class="text-white">(0 - 65535)</span>\
+															<input type="text" class="form-control" id="inputLightHue' + item + '" form-rounded" value="' + currentLight.state.hue + '" ' + HsDisabled + '>\
+														</div>\
+														<div class="col-5 pr-0">\
+															Sat <span class="text-white">(0 - 254)</span>\
+															<input type="text" class="form-control" id="inputLightSat' + item + '" form-rounded" value="' + currentLight.state.sat + '" ' + HsDisabled + '>\
+														</div>\
+														<div class="col-2">\
+															<button type="button" class="btn btn-sm btn-success px-1 py-0 mt-4" onclick="hsLight(' + item + ');"><span class="material-icons mt-1">done</span></button>\
+														</div>\
+													</div>\
+												</div>\
+											</div>\
+										</div>\
+									</div>\
+								</div>\
+							</div>\
+						</div>\
+					</div>\
+				</div>'
+			});
+
+				hueGroupHtml += '\
+				</div>\
+				</div>\
+			</div>'
+		$("#templategroups").append($(hueGroupHtml));
+		});
+
+		$.each(hueGroups, function(i, item) {
+			if (item.action.xy) {
+				var lightXy = item.action.xy;
+				var TestCieToRgb = cie_to_rgb(lightXy[0], lightXy[1]);
+
+				$("#preferredRgb" + i).spectrum({
+					color: "rgb(" + TestCieToRgb[0] + "," + TestCieToRgb[1] + "," + TestCieToRgb[2] + ")",
+					preferredFormat: "rgb",
+					showInput: true,
+					showPalette: true,
+					palette: [["red", "rgba(0, 255, 0, .5)", "rgb(0, 0, 255)"]],
+					change: function(color) {
+						var OutputColour = color.toRgb();
+						var BackToCie = rgb_to_cie(OutputColour.r, OutputColour.g, OutputColour.b);
+						$("#inputGroupXy" + i).val(BackToCie.toString());
+					}
+				});
+			}
+			else {
+				$("#preferredRgb" + i).attr('hidden', true);
+			};
+		});
+
+		// From https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+		function componentToHex(c) {
+			var hex = c.toString(16);
+			return hex.length == 1 ? "0" + hex : hex;
+		}
+
+		function rgbToHex(r, g, b) {
+			return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+		}
+
+		// Below RGB to CIE functions sourced from https://github.com/usolved/cie-rgb-converter
+
+		/*
+		With these functions you can convert the CIE color space to the RGB color space and vice versa.
+		The developer documentation for Philips Hue provides the formulas used in the code below:
+		https://developers.meethue.com/documentation/color-conversions-rgb-xy
+		I've used the formulas and Objective-C example code and transfered it to JavaScript.
+		Examples:
+		var rgb = cie_to_rgb(0.6611, 0.2936)
+		var cie = rgb_to_cie(255, 39, 60)
+		------------------------------------------------------------------------------------
+		The MIT License (MIT)
+		Copyright (c) 2017 www.usolved.net
+		Published under https://github.com/usolved/cie-rgb-converter
+		Permission is hereby granted, free of charge, to any person obtaining a copy
+		of this software and associated documentation files (the "Software"), to deal
+		in the Software without restriction, including without limitation the rights
+		to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+		copies of the Software, and to permit persons to whom the Software is
+		furnished to do so, subject to the following conditions:
+		The above copyright notice and this permission notice shall be included in
+		all copies or substantial portions of the Software.
+		THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+		IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+		FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+		AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+		LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+		OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+		THE SOFTWARE.
+		*/
+
+		/**
+		 * Converts CIE color space to RGB color space
+		 * @param {Number} x
+		 * @param {Number} y
+		 * @param {Number} brightness - Ranges from 1 to 254
+		 * @return {Array} Array that contains the color values for red, green and blue
+		 */
+		function cie_to_rgb(x, y, brightness)
+		{
+			//Set to maximum brightness if no custom value was given (Not the slick ECMAScript 6 way for compatibility reasons)
+			if (brightness === undefined) {
+				brightness = 254;
+			}
+
+			var z = 1.0 - x - y;
+			var Y = (brightness / 254).toFixed(2);
+			var X = (Y / y) * x;
+			var Z = (Y / y) * z;
+
+			//Convert to RGB using Wide RGB D65 conversion
+			var red 	=  X * 1.656492 - Y * 0.354851 - Z * 0.255038;
+			var green 	= -X * 0.707196 + Y * 1.655397 + Z * 0.036152;
+			var blue 	=  X * 0.051713 - Y * 0.121364 + Z * 1.011530;
+
+			//If red, green or blue is larger than 1.0 set it back to the maximum of 1.0
+			if (red > blue && red > green && red > 1.0) {
+
+				green = green / red;
+				blue = blue / red;
+				red = 1.0;
+			}
+			else if (green > blue && green > red && green > 1.0) {
+
+				red = red / green;
+				blue = blue / green;
+				green = 1.0;
+			}
+			else if (blue > red && blue > green && blue > 1.0) {
+
+				red = red / blue;
+				green = green / blue;
+				blue = 1.0;
+			}
+
+			//If anything is less than 0 set it back to 0
+			if (red < 0) {red = 0};
+			if (blue < 0) {blue = 0};
+			if (green < 0) {green = 0};
+
+			//Reverse gamma correction
+			red 	= red <= 0.0031308 ? 12.92 * red : (1.0 + 0.055) * Math.pow(red, (1.0 / 2.4)) - 0.055;
+			green 	= green <= 0.0031308 ? 12.92 * green : (1.0 + 0.055) * Math.pow(green, (1.0 / 2.4)) - 0.055;
+			blue 	= blue <= 0.0031308 ? 12.92 * blue : (1.0 + 0.055) * Math.pow(blue, (1.0 / 2.4)) - 0.055;
+
+			//Convert normalized decimal to decimal
+			red 	= Math.round(red * 255);
+			green 	= Math.round(green * 255);
+			blue 	= Math.round(blue * 255);
+
+			if (isNaN(red))
+				red = 0;
+
+			if (isNaN(green))
+				green = 0;
+
+			if (isNaN(blue))
+				blue = 0;
+
+
+			return [red, green, blue];
+		}
+
+		/**
+		 * Converts RGB color space to CIE color space
+		 * @param {Number} red
+		 * @param {Number} green
+		 * @param {Number} blue
+		 * @return {Array} Array that contains the CIE color values for x and y
+		 */
+		function rgb_to_cie(red, green, blue)
+		{
+			//Apply a gamma correction to the RGB values, which makes the color more vivid and more the like the color displayed on the screen of your device
+			var red 	= (red > 0.04045) ? Math.pow((red + 0.055) / (1.0 + 0.055), 2.4) : (red / 12.92);
+			var green 	= (green > 0.04045) ? Math.pow((green + 0.055) / (1.0 + 0.055), 2.4) : (green / 12.92);
+			var blue 	= (blue > 0.04045) ? Math.pow((blue + 0.055) / (1.0 + 0.055), 2.4) : (blue / 12.92);
+
+			//RGB values to XYZ using the Wide RGB D65 conversion formula
+			var X 		= red * 0.664511 + green * 0.154324 + blue * 0.162028;
+			var Y 		= red * 0.283881 + green * 0.668433 + blue * 0.047685;
+			var Z 		= red * 0.000088 + green * 0.072310 + blue * 0.986039;
+
+			//Calculate the xy values from the XYZ values
+			var x 		= (X / (X + Y + Z)).toFixed(4);
+			var y 		= (Y / (X + Y + Z)).toFixed(4);
+
+			if (isNaN(x))
+				x = 0;
+
+			if (isNaN(y))
+				y = 0;
+
+
+			return [x, y];
+		}
+
+    </script>
+
+</body>
+</html>
