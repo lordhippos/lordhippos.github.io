@@ -6,6 +6,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <title>HUE</title>
+
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
@@ -14,6 +15,9 @@
 
     <!-- RGB Colour Picker CSS -->
     <link href="https://bgrins.github.io/spectrum/spectrum.css" rel="stylesheet">
+
+    <!--Slider CSS-->
+    <link href="css/bootstrap-slider.css" rel="stylesheet" />
 
     <style media="screen" type="text/css">
         .form-control:disabled {
@@ -68,7 +72,8 @@
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <script src="https://bgrins.github.io/spectrum/spectrum.js"></script>
+    <script src="javascript/spectrum.js"></script>
+    <script src="javascript/bootstrap-slider.min.js"></script>
 
     <script>
 
@@ -229,8 +234,9 @@
 		function groupLightsBri(groupID) {
 		    var url = 'http://' + hubIP + '/api/' + userID + '/groups/' + groupID + '/action/';
 			var newBriInput = 'inputGroupBri' + groupID;
-			var lightBri = Number(document.getElementById(newBriInput).value);
-			var data = JSON.stringify({ "bri": lightBri });
+            var lightBri = Number(document.getElementById(newBriInput).innerHTML);
+            var convertBri = Math.round((lightBri / 100) * 254);
+            var data = JSON.stringify({ "bri": convertBri });
 
             $.ajax({
 				async: false,
@@ -451,7 +457,7 @@
 
 		getGroups();
 		getLights();
-		getScenes();
+        getScenes();
 
 		$.each(hueGroups, function(i, item) {
 			var groupLightAllOn = '<span class="material-icons p-0 m-0 align-bottom" style="font-size: 30px;">remove_circle</span>';
@@ -487,31 +493,26 @@
 				</div>\
 				<div class="card-body px-3 pt-3 pb-0">\
 					<div class="row mb-3 px-2">\
-						<div class="pr-3 pl-3 d-inline-block">\
+						<div class="pr-3 pl-1 d-inline-block">\
 							  <div class="form-inline">\
-							        All On <button type="button" class="btn btn-success mx-2" onclick="groupLightsOn(' + i + ');"><span class="material-icons mt-1">add_circle_outline</span></button>\
-							        All Off <button type="button" class="btn btn-danger mx-2" onclick="groupLightsOff(' + i + ');"><span class="material-icons mt-1">remove_circle_outline</span></button>\
+							        <button type="button" class="btn btn-success mx-2" onclick="groupLightsOn(' + i + ');"><span style="vertical-align: text-top; line-height: 10px;">All On</span> <span class="material-icons mt-1">add_circle_outline</span></button>\
+							        <button type="button" class="btn btn-danger mx-2" onclick="groupLightsOff(' + i + ');"><span style="vertical-align: text-top; line-height: 10px;">All Off</span> <span class="material-icons mt-1">remove_circle_outline</span></button>\
 								<div class="form-group">\
-								  <label>Brightness</label>\
-								   <input type="text" class="form-control ml-2" id="inputGroupBri' + i + '" form-rounded" value="' + item.action.bri + '">\
-								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2" onclick="groupLightsBri(' + i + ');"><span class="material-icons mt-1">done</span></button>\
+								  <label class="mr-3">Brightness</label>\
+                                    <input id="briSlider' + i + '" type="text" />\
+                                    <span class="ml-3 text-right font-weight-bold" style="min-width: 28px; font-size: 16px;" id="inputGroupBri' + i + '">' + (Math.round((item.action.bri / 254) * 100)) + '</span><span>%</span>\
+								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2 ml-1" onclick="groupLightsBri(' + i + ');"><span class="material-icons mt-1">done</span></button>\
 								</div>\
 								<div class="form-group">\
 								  <label>Xy</label>\
 								   <input type="text" class="form-control ml-2" id="inputGroupXy' + i + '" form-rounded" value="' + item.action.xy + '">\
 								   <input type="text" class="preferredRgb form-control" id="preferredRgb' + i + '" />\
-								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2" onclick="groupLightsXy(' + i + ');"><span class="material-icons mt-1">done</span></button>\
+								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2 ml-1" onclick="groupLightsXy(' + i + ');"><span class="material-icons mt-1">done</span></button>\
 								</div>\
 								<div class="form-group">\
 								  <label>Ct</label>\
 								   <input type="text" class="form-control ml-2" id="inputGroupCt' + i + '" form-rounded" value="' + item.action.ct + '">\
-								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2" onclick="groupLightsCt(' + i + ');"><span class="material-icons mt-1">done</span></button>\
-								</div>\
-								<div class="form-group">\
-								  <label>Hs</label>\
-								   <input type="text" class="form-control ml-2" id="inputGroupHue' + i + '" form-rounded" value="' + item.action.hue + '">\
-								   <input type="text" class="form-control ml-2" id="inputGroupSat' + i + '" form-rounded" value="' + item.action.sat + '">\
-								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2" onclick="groupLightsHs(' + i + ');"><span class="material-icons mt-1">done</span></button>\
+								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2 ml-1" onclick="groupLightsCt(' + i + ');"><span class="material-icons mt-1">done</span></button>\
 								</div>\
 							  </div>\
 						</div>\
@@ -687,7 +688,19 @@
 		$("#templategroups").append($(hueGroupHtml));
 		});
 
-		$.each(hueGroups, function(i, item) {
+        $.each(hueGroups, function (i, item) {
+
+            // Brightness Slider
+            $("#briSlider" + i).slider({
+                min: 0,
+                max: 100,
+                step: 5,
+                value: $("#inputGroupBri" + i)[0].innerHTML
+            });
+            $(".slider").on("slide", function (slideEvt) {
+                $("#inputGroupBri" + i).text(slideEvt.value);
+            });
+
 			if (item.action.xy) {
 				var lightXy = item.action.xy;
 				var TestCieToRgb = cie_to_rgb(lightXy[0], lightXy[1]);
@@ -707,7 +720,8 @@
 			}
 			else {
 				$("#preferredRgb" + i).attr('hidden', true);
-			};
+            };
+
 		});
 
 		// From https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
