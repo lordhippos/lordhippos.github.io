@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -30,12 +30,12 @@
 </head>
 <body style="background-color: #222222; padding-top: 60px;" class="text-secondary">
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-        <div class="col-7">
+        <div class="col-6">
             <ul class="navbar-nav">
                 <a class="navbar-brand" href="#">HUE</a>
             </ul>
         </div>
-        <div class="col-5">
+        <div class="col-6">
             <div class="row">
                 <div class="col-3 form-inline">
                     <label class="text-white col-5">Hub IP</label>
@@ -485,14 +485,14 @@
 						<p class="p-0 text-secondary" style="font-size: 1rem">Any On</p>\
 					</div>\
 				</div>\
-				<div class="card-body p-3">\
+				<div class="card-body px-3 pt-3 pb-0">\
 					<div class="row mb-3 px-2">\
 						<div class="pr-3 pl-3 d-inline-block">\
 							  <div class="form-inline">\
-							All On <button type="button" class="btn btn-success mx-2" onclick="groupLightsOn(' + i + ');"><span class="material-icons mt-1">add_circle_outline</span></button>\
-							All Off <button type="button" class="btn btn-danger mx-2" onclick="groupLightsOff(' + i + ');"><span class="material-icons mt-1">remove_circle_outline</span></button>\
+							        All On <button type="button" class="btn btn-success mx-2" onclick="groupLightsOn(' + i + ');"><span class="material-icons mt-1">add_circle_outline</span></button>\
+							        All Off <button type="button" class="btn btn-danger mx-2" onclick="groupLightsOff(' + i + ');"><span class="material-icons mt-1">remove_circle_outline</span></button>\
 								<div class="form-group">\
-								  <label>Brightn ess</label>\
+								  <label>Brightness</label>\
 								   <input type="text" class="form-control ml-2" id="inputGroupBri' + i + '" form-rounded" value="' + item.action.bri + '">\
 								   <button type="button" class="btn btn-sm btn-success px-1 py-0 mr-2" onclick="groupLightsBri(' + i + ');"><span class="material-icons mt-1">done</span></button>\
 								</div>\
@@ -562,35 +562,31 @@
 
 				hueGroupHtml += '\
 				<div class="card bg-dark text-secondary">\
-					<div class="card-header h5' + style + '" style="background-color:#222222;">\
+					<div class="card-header h5 p-2 ' + style + '" style="background-color:#222222;">\
 						<div class="row">\
-							<div class="col-8">\
-								<div class="pr-3 pl-2 d-inline-block">\
+							<div class="col-9">\
+								<div class="pr-2 pl-2 d-inline-block">\
 									<h3 class="p-0 m-0">' + item + '</h3>\
-									<p class="p-0 text-secondary" style="font-size: 1rem">ID</p>\
+									<p class="p-0 m-0 text-secondary" style="font-size: 1rem">ID</p>\
 								</div>\
-								<div class="pr-3 pl-2 d-inline-block border-left border-secondary">\
+								<div class="pr-2 pl-2 d-inline-block border-left border-secondary">\
 								  <h3 class="p-0 m-0">' + currentLight.name + '</h3>\
-								  <p class="p-0 text-secondary" style="font-size: 1rem">Name</p>\
+								  <p class="p-0 m-0 text-secondary" style="font-size: 1rem">Name</p>\
 								</div>\
-								<div class="pr-3 pl-2 d-inline-block border-left border-secondary">\
+								<div class="pr-2 pl-2 d-inline-block border-left border-secondary">\
 									<h3 class="p-0 m-0">' + (Math.round((currentLight.state.bri / 254) * 100)) + '%</h3>\
-									<p class="p-0 text-secondary" style="font-size: 1rem">Brightness</p>\
+									<p class="p-0 m-0 text-secondary" style="font-size: 1rem">Brightness</p>\
 								</div>\
-								<div class="pr-3 pl-2 d-inline-block border-left border-secondary">\
-									<h3 class="p-0 m-0">' + currentLight.state.colormode + '</h3>\
-									<p class="p-0 text-secondary" style="font-size: 1rem">Color Mode</p>\
-								</div>\
-								<div class="pr-3 pl-2 d-inline-block border-left border-secondary">\
+								<div class="pr-2 pl-2 d-inline-block border-left border-secondary">\
 									<h3 class="p-0 m-0">' + State + '</h3>\
-									<p class="p-0 text-secondary" style="font-size: 1rem">State</p>\
+									<p class="p-0 m-0 text-secondary" style="font-size: 1rem">State</p>\
 								</div>\
-								<div class="pr-3 pl-2 d-inline-block border-left border-secondary">\
+								<div class="pr-2 pl-2 d-inline-block border-left border-secondary">\
 									<h3 class="p-0 m-0">' + Reachable + '</h3>\
-									<p class="p-0 text-secondary" style="font-size: 1rem">Reachable</p>\
+									<p class="p-0 m-0 text-secondary" style="font-size: 1rem">Reachable</p>\
 								</div>\
 							</div>\
-							<div class="col-4">\
+							<div class="col-3">\
 								<div class="text-right py-2">\
 									<button type="button" class="btn btn-secondary" onclick="pokeLight(' + item + ');"><span class="material-icons mt-1">search</span></button>\
 									<button type="button" class="btn btn-success" onclick="enableLight(' + item + ');"><span class="material-icons mt-1">add_circle_outline</span></button>\
@@ -603,8 +599,8 @@
 						<div class="row">\
 							<div class="col-3">\
 								<div class="card text-center" style="border: 0px;">\
-								  <div class="card-img-top p-3" style="height: 180px; width: 100%; background-color:#222222;">' + bulbIcon + '</div>\
-								  <div class="card-body">\
+								  <div class="card-img-top p-3" style="height: 170px; width: 100%; background-color:#222222;">' + bulbIcon + '</div>\
+								  <div class="card-body p-1">\
 									<h4 class="card-title">' + bulbName + ' </h4>\
 									<div>Model: ' + currentLight.modelid + '</div>\
 									<div>SoftVer: ' + currentLight.swversion + '</div>\
@@ -671,25 +667,6 @@
 														</div>\
 														<div class="col-2">\
 															<button type="button" class="btn btn-sm btn-success px-1 py-0" onclick="ctLight(' + item + ');"><span class="material-icons mt-1">done</span></button>\
-														</div>\
-													</div>\
-												</div>\
-											</div>\
-										</div>\
-										<div class="row mt-2 mr-1">\
-											<div class="' + HsStyle + '">\
-												<div class="card-body p-3">\
-													<div class="row">\
-														<div class="col-5 pr-0">\
-															Hue <span class="text-white">(0 - 65535)</span>\
-															<input type="text" class="form-control" id="inputLightHue' + item + '" form-rounded" value="' + currentLight.state.hue + '" ' + HsDisabled + '>\
-														</div>\
-														<div class="col-5 pr-0">\
-															Sat <span class="text-white">(0 - 254)</span>\
-															<input type="text" class="form-control" id="inputLightSat' + item + '" form-rounded" value="' + currentLight.state.sat + '" ' + HsDisabled + '>\
-														</div>\
-														<div class="col-2">\
-															<button type="button" class="btn btn-sm btn-success px-1 py-0 mt-4" onclick="hsLight(' + item + ');"><span class="material-icons mt-1">done</span></button>\
 														</div>\
 													</div>\
 												</div>\
